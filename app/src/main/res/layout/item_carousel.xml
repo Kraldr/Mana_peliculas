@@ -1,0 +1,32 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/btnPage"
+    android:backgroundTint="#FFF"
+    android:layout_height="240dp"
+    app:cardElevation="0dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:id="@+id/imgCarousel"
+            android:background="#000"
+            android:scaleType="centerCrop"
+            android:layout_height="match_parent"/>
+
+        <Button
+            android:id="@+id/txtTitleCarousel"
+            android:layout_width="200dp"
+            android:textStyle="bold"
+            android:text="Titulo"
+            android:textColor="#FFF"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="16dp"/>
+
+    </FrameLayout>
+
+</androidx.cardview.widget.CardView>
