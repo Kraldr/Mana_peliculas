@@ -5,8 +5,8 @@ import android.view.View
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.model.GlideUrl
-import com.bumptech.glide.load.model.LazyHeaders
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import com.example.manapeliculas.Movie
 import com.example.manapeliculas.databinding.ItemMovieBinding
 
@@ -19,18 +19,14 @@ class PDestacadasViewHolder (view: View): RecyclerView.ViewHolder(view) {
         binding.txtTitle.text = titulo
         binding.txtYear.text = year
 
-        val userAgent =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.54"
-
-        val glideUrl = GlideUrl(
-            src,
-            LazyHeaders.Builder()
-                .addHeader("User-Agent", userAgent)
-                .build()
-        )
 
         Glide.with(contexto)
-            .load(glideUrl)
+            .load(src)
+            .apply(
+                RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL) // Guardar en caché tanto la imagen original como la redimensionada
+                .override(250, 340) // Establecer dimensiones específicas para la imagen
+                .centerCrop()) // Recortar la imagen para que se ajuste a las dimensiones especificadas
             .into(binding.imgMovie)
 
         binding.btnAnime.setOnClickListener {

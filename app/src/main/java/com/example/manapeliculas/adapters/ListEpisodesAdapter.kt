@@ -13,10 +13,20 @@ class ListEpisodesAdapter(
     private val applicationContext: Context
 ) : RecyclerView.Adapter<EpisodeViewHolder> () {
 
+    interface OnItemClickListener {
+        fun onItemClicked(url: String)
+    }
+
+    private var listener: OnItemClickListener? = null
+
+    fun setOnItemClickListener(listener: OnItemClickListener) {
+        this.listener = listener
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.custom_list_episode, parent, false)
-        return EpisodeViewHolder(view)
+        return EpisodeViewHolder(view, listener)
     }
 
     override fun getItemCount(): Int {
