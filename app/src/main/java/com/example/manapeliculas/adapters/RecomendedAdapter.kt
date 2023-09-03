@@ -8,7 +8,7 @@ import com.example.manapeliculas.R
 import com.example.manapeliculas.data.cuevana2.PDestacada
 import com.example.manapeliculas.viewHolders.RecomendedViewHolder
 
-class RecomendedAdapter(val data: MutableList<PDestacada>, val contexto: Context): RecyclerView.Adapter<RecomendedViewHolder> () {
+class RecomendedAdapter(val data: List<PDestacada>, val contexto: Context): RecyclerView.Adapter<RecomendedViewHolder> () {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecomendedViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)

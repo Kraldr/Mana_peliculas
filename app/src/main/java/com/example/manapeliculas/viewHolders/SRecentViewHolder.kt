@@ -23,11 +23,43 @@ class SRecentViewHolder(view: View): RecyclerView.ViewHolder(view) {
         applicationContext: Context
     ) {
 
-        binding.textViewServer.text = titulo
+        if (hrefIMG.isNotEmpty()) {
+            Glide.with(applicationContext)
+                .load(hrefIMG)
+                .into(binding.imageViewServer)
 
-        Glide.with(applicationContext)
-            .load(hrefIMG)
-            .into(binding.imageViewServer)
+            // Agregar una animación de desvanecimiento gradual al ShimmerLayout
+            binding.shimmerLayout.animate()
+                .alpha(0f)
+                .setDuration(500) // Duración de la animación en milisegundos
+                .withEndAction {
+                    // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                    binding.shimmerLayout.visibility = View.GONE
+                    binding.shimmerLayout.stopShimmer()
+                }
+
+            binding.shimmerTitle.animate()
+                .alpha(0f)
+                .setDuration(500) // Duración de la animación en milisegundos
+                .withEndAction {
+                    // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                    binding.shimmerTitle.visibility = View.GONE
+                    binding.shimmerTitle.stopShimmer()
+                }
+
+            binding.shimmerSubtitle.animate()
+                .alpha(0f)
+                .setDuration(500) // Duración de la animación en milisegundos
+                .withEndAction {
+                    // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                    binding.shimmerSubtitle.visibility = View.GONE
+                    binding.shimmerSubtitle.stopShimmer()
+                }
+        }
+
+        binding.textViewServer.text = titulo
+        binding.textViewType.text = year
+
 
         binding.btnServer.setOnClickListener {
             val intent = Intent(applicationContext, Movie::class.java)
@@ -35,7 +67,6 @@ class SRecentViewHolder(view: View): RecyclerView.ViewHolder(view) {
             intent.putExtra("href", href)
             applicationContext.startActivity(intent)
         }
-
 
     }
 }

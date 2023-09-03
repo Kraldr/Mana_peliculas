@@ -7,9 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.manapeliculas.R
 import com.example.manapeliculas.data.cuevana2.PDestacada
 import com.example.manapeliculas.viewHolders.PDestacadasViewHolder
-import org.jsoup.nodes.Element
 
-class PDestacadasAdapter(val data: MutableList<PDestacada>, val contexto: FragmentActivity): RecyclerView.Adapter<PDestacadasViewHolder> () {
+class PDestacadasAdapter(val data: List<PDestacada>, val contexto: FragmentActivity): RecyclerView.Adapter<PDestacadasViewHolder> () {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PDestacadasViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)

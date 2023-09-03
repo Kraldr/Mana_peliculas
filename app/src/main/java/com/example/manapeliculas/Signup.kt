@@ -1,8 +1,12 @@
 package com.example.manapeliculas
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.manapeliculas.data.User
 import com.example.manapeliculas.databinding.ActivitySignupBinding
@@ -17,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase
 private lateinit var binding: ActivitySignupBinding
 private var mAuth: FirebaseAuth? = null
 private var mDatabase: DatabaseReference? = null
+private var loadingDialog: AlertDialog? = null
 
 class Signup : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +33,7 @@ class Signup : AppCompatActivity() {
         mDatabase = FirebaseDatabase.getInstance().reference;
 
         binding.registerButton.setOnClickListener {
+            showLoadingDialog()
             registerUser()
         }
 
@@ -69,14 +75,14 @@ class Signup : AppCompatActivity() {
                             ?.addOnCompleteListener { innerTask ->
                                 val rootView = findViewById<View>(android.R.id.content)
                                 if (innerTask.isSuccessful) {
-                                    Snackbar.make(rootView, "Datos guardados en la base de datos", Snackbar.LENGTH_LONG)
-                                        .show()
+                                    Toast.makeText(applicationContext, "Datos guardados correctamente", Toast.LENGTH_LONG).show()
                                     Log.d("SignupActivity", "Datos guardados en la base de datos")
+                                    hideLoadingDialog()
                                     finish()
                                 } else {
                                     val error = innerTask.exception
-                                    Snackbar.make(rootView, "Error al guardar los datos: ${error?.message}", Snackbar.LENGTH_LONG)
-                                        .show()
+                                    hideLoadingDialog()
+                                    Toast.makeText(applicationContext, "Error al guardar los datos: ${error?.message}", Toast.LENGTH_LONG).show()
                                     Log.e("SignupActivity", "Error al guardar los datos: ${error?.message}")
                                 }
                             }
@@ -99,6 +105,22 @@ class Signup : AppCompatActivity() {
         }
 
         chipGroup.addView(chip)
+    }
+
+    private fun showLoadingDialog() {
+        val dialogBuilder = AlertDialog.Builder(this)
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val dialogView = inflater.inflate(R.layout.custom_progress_dialog, null)
+
+        dialogBuilder.setView(dialogView)
+        dialogBuilder.setCancelable(false)  // Evita que el usuario pueda cancelar el diálogo
+
+        loadingDialog = dialogBuilder.create()
+        loadingDialog?.show()
+    }
+
+    private fun hideLoadingDialog() {
+        loadingDialog?.dismiss()
     }
 
     private fun getChipsString(chipGroup: ChipGroup): String {

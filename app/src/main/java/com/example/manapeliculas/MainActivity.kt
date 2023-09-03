@@ -3,28 +3,21 @@ package com.example.manapeliculas
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.ImageButton
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.navigation.NavigationView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.example.manapeliculas.data.UserData
-import com.example.manapeliculas.data.cuevana2.LastP
 import com.example.manapeliculas.databinding.ActivityMainBinding
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -38,14 +31,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var mDatabase: DatabaseReference? = null
 
-    private val TAG = "MainActivity"
-
     companion object {
-        val instance = MainActivity()
+        lateinit var instance: MainActivity
+            private set
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        instance = this
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -66,47 +59,37 @@ class MainActivity : AppCompatActivity() {
             window.statusBarColor = ContextCompat.getColor(this, R.color.colorStatus)
         }
 
-        var userData = getUserDataFromSharedPreferences()
         mDatabase = FirebaseDatabase.getInstance().reference
+        val userData = getUserDataFromSharedPreferences()
 
         if (userData.isLoggedIn) {
             loadData(userData.userId)
         } else {
             Glide.with(applicationContext)
                 .load("https://mir-s3-cdn-cf.behance.net/project_modules/disp/84c20033850498.56ba69ac290ea.png")
-                .into(findViewById(R.id.profile));
+                .into(findViewById(R.id.profile))
         }
 
-
-
-        val btnSearch: ImageButton = findViewById(R.id.search)
+        val btnSearch = findViewById<ImageButton>(R.id.search)
 
         btnSearch.setOnClickListener {
-            startActivity(Intent(applicationContext, Search::class.java).apply {
-            })
+            startActivity(Intent(applicationContext, Search::class.java))
         }
 
         btnProfile.setOnClickListener {
-            userData = getUserDataFromSharedPreferences()
+            val userData = getUserDataFromSharedPreferences()
             if (userData.isLoggedIn) {
-                startActivity(Intent(applicationContext, Profile::class.java).apply {
-                })
+                startActivity(Intent(applicationContext, Profile::class.java))
+                finish()
             } else {
-                startActivity(Intent(applicationContext, Login::class.java).apply {
-                })
+                startActivity(Intent(applicationContext, Login::class.java))
             }
         }
 
-        /*binding.appBarMain.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }*/
-
-        val drawerLayout: DrawerLayout = binding.drawerLayout
-        val navView: NavigationView = binding.navView
+        val drawerLayout = binding.drawerLayout
+        val navView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
+
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_news
@@ -125,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 
                 Glide.with(applicationContext)
                     .load(userImage)
-                    .into(findViewById(R.id.profile));
+                    .into(findViewById(R.id.profile))
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -135,13 +118,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getUserDataFromSharedPreferences(): UserData {
-        val sharedPreferences: SharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences =
+            getSharedPreferences("UserData", Context.MODE_PRIVATE)
 
         val userId = sharedPreferences.getString("userID", "") ?: ""
         val tags = sharedPreferences.getString("tags", "") ?: ""
+        val name = sharedPreferences.getString("name", "") ?: ""
+        val userImage = sharedPreferences.getString("userImage", "") ?: ""
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
-
-        return UserData(userId, tags, isLoggedIn)
+        return UserData(userId, tags, isLoggedIn, name, userImage)
     }
 
     override fun onSupportNavigateUp(): Boolean {

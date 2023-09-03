@@ -6,10 +6,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.manapeliculas.adapters.ListRecentAdapter
+import com.example.manapeliculas.data.cuevana2.PDestacada
 import com.example.manapeliculas.data.searchDataItem
 import com.example.manapeliculas.databinding.ActivitySearchBinding
 import kotlinx.coroutines.CoroutineScope
@@ -37,11 +40,21 @@ class Search : AppCompatActivity() {
             window.statusBarColor = Color.parseColor("#FFFFFF")
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val window = window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = ContextCompat.getColor(this, android.R.color.white)
+            window.navigationBarColor = ContextCompat.getColor(this, R.color.colorStatus)
+            window.statusBarColor = ContextCompat.getColor(this, R.color.colorStatus)
+        }
+
+        val searchDataVoid = MutableList(6) { searchDataItem("", "", "", "") }
+
         binding.search.setOnEditorActionListener { _, keyCode, event ->
             if (((event?.action ?: -1) == KeyEvent.ACTION_DOWN)
                 || keyCode == EditorInfo.IME_ACTION_DONE
             ) {
-
+                initRecyclerViewRecent(searchDataVoid)
                 val replacedString = binding.search.text.toString().replace(" ", "%20")
                 searchCuevana2(replacedString)
 
@@ -68,7 +81,7 @@ class Search : AppCompatActivity() {
             val doc = Jsoup.parse(body)
 
             val searchData =
-                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div:nth-child(1)")
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
 
 
             val data = mutableListOf<searchDataItem>()
@@ -84,8 +97,6 @@ class Search : AppCompatActivity() {
                     )
                 )
             }
-
-            data.reverse()
 
             withContext(Dispatchers.Main) {
                 initRecyclerViewRecent(data)

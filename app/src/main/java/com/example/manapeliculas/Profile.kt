@@ -4,11 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -40,6 +45,14 @@ class Profile : AppCompatActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val window = window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = ContextCompat.getColor(this, android.R.color.white)
+            window.navigationBarColor = ContextCompat.getColor(this, R.color.colorStatus)
+            window.statusBarColor = ContextCompat.getColor(this, R.color.colorStatus)
+        }
+
         val rootView = findViewById<View>(android.R.id.content)
         Snackbar.make(rootView, "Inicio de sesión exitoso", Snackbar.LENGTH_LONG).show()
 
@@ -49,12 +62,20 @@ class Profile : AppCompatActivity() {
         loadData(userData!!.userId)
 
         binding.dropdownMenu.setOnClickListener {
+            val bottomSheetDialogFragment = MyBottomSheetDialogFragment()
+            bottomSheetDialogFragment.show(supportFragmentManager, bottomSheetDialogFragment.tag)
             // Abre la galería para seleccionar una imagen
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "image/*"
-            startActivityForResult(intent, 1)
+            //val intent = Intent(Intent.ACTION_GET_CONTENT)
+            //intent.type = "image/*"
+            //startActivityForResult(intent, 1)
         }
 
+    }
+
+    override fun onBackPressed() {
+        startActivity(Intent(applicationContext, MainActivity::class.java).apply {
+        })
+        finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -165,13 +186,13 @@ class Profile : AppCompatActivity() {
     }
 
     private fun getUserDataFromSharedPreferences(): UserData {
-        val sharedPreferences: SharedPreferences =
-            getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences = getSharedPreferences("UserData", Context.MODE_PRIVATE)
 
         val userId = sharedPreferences.getString("userID", "") ?: ""
         val tags = sharedPreferences.getString("tags", "") ?: ""
+        val name = sharedPreferences.getString("name", "") ?: ""
+        val userImage = sharedPreferences.getString("userImage", "") ?: ""
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
-
-        return UserData(userId, tags, isLoggedIn)
+        return UserData(userId, tags, isLoggedIn, name, userImage)
     }
 }

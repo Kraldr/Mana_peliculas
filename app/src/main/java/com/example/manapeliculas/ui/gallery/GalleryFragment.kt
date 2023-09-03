@@ -5,11 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.manapeliculas.adapters.PDestacadasAdapter
 import com.example.manapeliculas.data.cuevana2.PDestacada
@@ -58,7 +56,6 @@ class GalleryFragment : Fragment() {
 
 
     private fun initRecyclerView(page: Int) {
-
         coroutineScope.launch(Dispatchers.IO) {
             val request = Request.Builder()
                 .url("https://www.cuevana2espanol.icu/archives/movies/page/$page")
@@ -71,22 +68,23 @@ class GalleryFragment : Fragment() {
 
             val pDestacadas = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(1) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
 
-            val dataEpisode = mutableListOf<PDestacada>()
-            for (pDestacada in pDestacadas) {
-                dataEpisode.add(
-                    PDestacada(
-                    "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a > img")?.attr("src").toString(),
-                    pDestacada.selectFirst("article > div > a > h3")?.text().toString(),
-                    pDestacada.selectFirst("article > div > span")?.text().toString())
+            val dataEpisode = pDestacadas.map {
+                val article = it.selectFirst("article > div > a")
+                val img = it.selectFirst("article > div > a > img")
+                val title = it.selectFirst("article > div > a > h3")
+                val span = it.selectFirst("article > div > span")
+
+                PDestacada(
+                    "https://www.cuevana2espanol.icu${article?.attr("href")}",
+                    "https://www.cuevana2espanol.icu${img?.attr("src")}",
+                    title?.text().toString(),
+                    span?.text().toString()
                 )
             }
 
             withContext(Dispatchers.Main) {
-                binding.recyView.apply {
-                    layoutManager = GridLayoutManager(requireActivity(), 3)
-                    adapter = PDestacadasAdapter(dataEpisode, requireActivity())
-                }
+                binding.recyView.layoutManager = GridLayoutManager(requireActivity(), 3)
+                binding.recyView.adapter = PDestacadasAdapter(dataEpisode, requireActivity())
             }
         }
     }

@@ -8,24 +8,38 @@ import com.bumptech.glide.Glide
 import com.example.manapeliculas.Movie
 import com.example.manapeliculas.databinding.ItemCarouselBinding
 import com.bumptech.glide.request.target.Target;
+import com.example.manapeliculas.data.servers.servers
 
 
-class CarouselViewHolder (view: View): RecyclerView.ViewHolder(view) {
+class CarouselViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val binding = ItemCarouselBinding.bind(view)
 
-    fun bin (contexto: FragmentActivity, href: String, src: String, titulo: String) {
+    fun bin(context: FragmentActivity, href: String, src: String, titulo: String) {
         binding.txtTitleCarousel.text = titulo
 
-        Glide.with(contexto)
-            .load(src)
-            .into(binding.imgCarousel)
+        if (src.isNotEmpty()) {
+            // Cargar la imagen con Glide
+            Glide.with(context)
+                .load(src)
+                .into(binding.imgCarousel)
+
+            // Agregar una animación de desvanecimiento gradual al ShimmerLayout
+            binding.shimmerLayout.animate()
+                .alpha(0f)
+                .setDuration(500) // Duración de la animación en milisegundos
+                .withEndAction {
+                    // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                    binding.shimmerLayout.visibility = View.GONE
+                    binding.shimmerLayout.stopShimmer()
+                }
+        }
 
         binding.txtTitleCarousel.setOnClickListener {
-            val intent = Intent(contexto, Movie::class.java)
+            val intent = Intent(context, Movie::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.putExtra("href", href)
-            contexto.startActivity(intent)
+            context.startActivity(intent)
         }
     }
 }

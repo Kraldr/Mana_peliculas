@@ -11,29 +11,36 @@ import com.example.manapeliculas.Movie
 import com.example.manapeliculas.databinding.ItemMovieBinding
 
 
-class PDestacadasViewHolder (view: View): RecyclerView.ViewHolder(view) {
+class PDestacadasViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val binding = ItemMovieBinding.bind(view)
 
-    fun bin (contexto: FragmentActivity, titulo: String, year: String, src: String, href: String) {
+    fun bin(context: FragmentActivity, titulo: String, year: String, src: String, href: String) {
         binding.txtTitle.text = titulo
         binding.txtYear.text = year
 
+        if (src.isNotEmpty()) {
+            Glide.with(context)
+                .load(src)
+                .centerCrop()
+                .into(binding.imgMovie)
 
-        Glide.with(contexto)
-            .load(src)
-            .apply(
-                RequestOptions()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .override(250, 340)
-                .centerCrop())
-            .into(binding.imgMovie)
+            // Agregar una animación de desvanecimiento gradual al ShimmerLayout
+            binding.shimmerLayout.animate()
+                .alpha(0f)
+                .setDuration(500) // Duración de la animación en milisegundos
+                .withEndAction {
+                    // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                    binding.shimmerLayout.visibility = View.GONE
+                    binding.shimmerLayout.stopShimmer()
+                }
+        }
 
         binding.btnAnime.setOnClickListener {
-            val intent = Intent(contexto, Movie::class.java)
+            val intent = Intent(context, Movie::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.putExtra("href", href)
-            contexto.startActivity(intent)
+            context.startActivity(intent)
         }
     }
 }

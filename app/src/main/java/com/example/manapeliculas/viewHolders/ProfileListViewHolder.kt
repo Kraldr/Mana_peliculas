@@ -34,6 +34,15 @@ class ProfileListViewHolder (view: View): RecyclerView.ViewHolder(view) {
             .load(glideUrl)
             .into(binding.imgMovie)
 
+        binding.shimmerLayout.animate()
+            .alpha(0f)
+            .setDuration(500) // Duración de la animación en milisegundos
+            .withEndAction {
+                // Después de la animación, ocultar el ShimmerLayout y detener la animación del Shimmer
+                binding.shimmerLayout.visibility = View.GONE
+                binding.shimmerLayout.stopShimmer()
+            }
+
         binding.btnAnime.setOnClickListener {
             val intent = Intent(contexto, Movie::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
