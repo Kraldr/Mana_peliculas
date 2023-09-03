@@ -24,9 +24,9 @@ class PDestacadasViewHolder (view: View): RecyclerView.ViewHolder(view) {
             .load(src)
             .apply(
                 RequestOptions()
-                .diskCacheStrategy(DiskCacheStrategy.ALL) // Guardar en caché tanto la imagen original como la redimensionada
-                .override(250, 340) // Establecer dimensiones específicas para la imagen
-                .centerCrop()) // Recortar la imagen para que se ajuste a las dimensiones especificadas
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .override(250, 340)
+                .centerCrop())
             .into(binding.imgMovie)
 
         binding.btnAnime.setOnClickListener {

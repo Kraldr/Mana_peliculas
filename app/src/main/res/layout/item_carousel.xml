@@ -2,7 +2,7 @@
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/btnPage"
-    android:backgroundTint="#FFF"
+    android:backgroundTint="#1B1B1E"
     android:layout_height="240dp"
     app:cardElevation="0dp">
 
@@ -13,7 +13,7 @@
         <ImageView
             android:layout_width="match_parent"
             android:id="@+id/imgCarousel"
-            android:background="#000"
+            android:background="#1B1B1E"
             android:scaleType="centerCrop"
             android:layout_height="match_parent"/>
 
@@ -23,6 +23,7 @@
             android:textStyle="bold"
             android:text="Titulo"
             android:textColor="#FFF"
+            android:backgroundTint="#1B1B1E"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"
             android:layout_marginBottom="16dp"/>

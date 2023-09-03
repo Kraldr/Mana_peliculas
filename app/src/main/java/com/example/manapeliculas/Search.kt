@@ -10,19 +10,23 @@ import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.manapeliculas.adapters.ListRecentAdapter
-import com.example.manapeliculas.data.searchData
+import com.example.manapeliculas.data.searchDataItem
 import com.example.manapeliculas.databinding.ActivitySearchBinding
-import com.google.gson.Gson
-import okhttp3.Call
-import okhttp3.Callback
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import okio.IOException
+import org.jsoup.Jsoup
 
 class Search : AppCompatActivity() {
 
     private lateinit var binding: ActivitySearchBinding
+    private val job = Job()
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
+    private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,30 +56,45 @@ class Search : AppCompatActivity() {
     }
 
     private fun searchCuevana2(url: String) {
-        val url = "https://scrape-app-7fd846d66850.herokuapp.com/searchcue/${url}"
-        val request = Request.Builder().url(url).get().build()
 
-        val client = OkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println(e)
+        coroutineScope.launch(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url("https://www.cuevana2espanol.icu/search?q=$url")
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+
+            val doc = Jsoup.parse(body)
+
+            val searchData =
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div:nth-child(1)")
+
+
+            val data = mutableListOf<searchDataItem>()
+            for (search in searchData) {
+                data.add(
+                    searchDataItem(
+                        "https://www.cuevana2espanol.icu" + search.selectFirst("article > div > a")
+                            ?.attr("href").toString(),
+                        "https://www.cuevana2espanol.icu" + search.selectFirst("article > div > a > img")
+                            ?.attr("src").toString(),
+                        search.selectFirst("article > div > a > h3")?.text().toString(),
+                        search.selectFirst("article > div > span")?.text().toString()
+                    )
+                )
             }
 
-            override fun onResponse(call: Call, response: Response) {
-                val responseData = response.body?.string()
-                val gson = Gson()
-                val data = gson.fromJson(responseData, searchData::class.java)
+            data.reverse()
 
-                val refresh = Handler(Looper.getMainLooper())
-                refresh.post {
-                    initRecyclerViewRecent(data)
-                }
+            withContext(Dispatchers.Main) {
+                initRecyclerViewRecent(data)
             }
-        })
+        }
     }
 
     private fun initRecyclerViewRecent(
-        data: searchData
+        data: MutableList<searchDataItem>
     ) {
         val refresh = Handler(Looper.getMainLooper())
         refresh.post(kotlinx.coroutines.Runnable {

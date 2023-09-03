@@ -19,7 +19,7 @@ class CarouselViewHolder (view: View): RecyclerView.ViewHolder(view) {
 
         Glide.with(contexto)
             .load(src)
-            .into(binding.imgCarousel);
+            .into(binding.imgCarousel)
 
         binding.txtTitleCarousel.setOnClickListener {
             val intent = Intent(contexto, Movie::class.java)

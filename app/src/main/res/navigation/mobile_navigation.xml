@@ -22,4 +22,10 @@
         android:name="com.example.manapeliculas.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+
+    <fragment
+        android:id="@+id/nav_news"
+        android:name="com.example.manapeliculas.ui.news.NewsFragment"
+        android:label="Noticias"
+        tools:layout="@layout/fragment_news" />
 </navigation>

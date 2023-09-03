@@ -8,7 +8,7 @@ import com.example.manapeliculas.R
 import com.example.manapeliculas.data.cuevana2.SDestacada
 import com.example.manapeliculas.viewHolders.SDestacadasViewHolder
 
-class SDestacadasAdapter(val data: List<SDestacada>, val contexto: FragmentActivity): RecyclerView.Adapter<SDestacadasViewHolder> () {
+class SDestacadasAdapter(val data: MutableList<SDestacada>, val contexto: FragmentActivity): RecyclerView.Adapter<SDestacadasViewHolder> () {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SDestacadasViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)

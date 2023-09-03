@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:id="@+id/scroll_view"
-    android:background="#FFF"
-    tools:context=".Movie">
+    android:layout_height="match_parent"
+    android:background="#1B1B1E"
+    tools:context=".Movie"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -14,7 +15,7 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:background="#FFF"
+            android:background="#1B1B1E"
             android:layout_height="wrap_content">
 
             <ImageView
@@ -24,6 +25,7 @@
                 android:scaleType="centerCrop"/>
 
             <androidx.cardview.widget.CardView
+                android:backgroundTint="#1B1B1E"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/cardview"
@@ -37,47 +39,51 @@
                     android:layout_height="wrap_content">
 
                     <LinearLayout
-                        android:background="#FFF"
+                        android:background="#1B1B1E"
                         android:layout_marginTop="10dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         tools:ignore="WebViewLayout">
 
+
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent">
+
+                            <com.facebook.shimmer.ShimmerFrameLayout
+                                android:id="@+id/shimmer_sinop"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="match_parent"
+                                    app:cardCornerRadius="20dp"
+                                    android:layout_height="match_parent">
+
+                                    <FrameLayout
+                                        android:layout_width="match_parent"
+                                        android:id="@+id/root_layout_text3"
+                                        android:background="@drawable/progress_bar_animation"
+                                        android:layout_height="100dp">
+
+                                    </FrameLayout>
+
+                                </androidx.cardview.widget.CardView>
+
+                            </com.facebook.shimmer.ShimmerFrameLayout>
 
                             <TextView
                                 android:id="@+id/description_text_view"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:padding="16dp"
-                                android:textColor="#000"
-                                android:text="Sinopsis"
+                                android:textColor="#E4E2E6"
                                 android:layout_gravity="center_horizontal"
                                 android:inputType="textMultiLine"/>
 
-                            <androidx.cardview.widget.CardView
-                                android:layout_width="match_parent"
-                                app:cardCornerRadius="20dp"
-                                android:layout_height="match_parent">
-
-                                <androidx.constraintlayout.widget.ConstraintLayout
-                                    android:layout_width="match_parent"
-                                    android:id="@+id/root_layout_text3"
-                                    android:background="@drawable/progress_bar_animation"
-                                    android:layout_height="100dp">
-
-                                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                            </androidx.cardview.widget.CardView>
-
                         </RelativeLayout>
 
-
-
-                        <!-- Puntuación de la película -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -85,6 +91,7 @@
                             android:padding="16dp"
                             android:orientation="horizontal">
 
+                            <!-- Contenedor del TextView y Shimmer -->
                             <RelativeLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content">
@@ -93,41 +100,88 @@
                                     android:id="@+id/rating_text_view"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:textColor="#000"
-                                    android:text="0.0"
+                                    android:layout_marginStart="8dp"
+                                    android:textColor="#E4E2E6"
+                                    android:text=""
                                     android:layout_weight="0"/>
 
-
-                                <androidx.cardview.widget.CardView
+                                <!-- Shimmer para la calificación -->
+                                <com.facebook.shimmer.ShimmerFrameLayout
+                                    android:id="@+id/shimmer_rate"
                                     android:layout_width="wrap_content"
-                                    app:cardCornerRadius="20dp"
-                                    android:layout_height="wrap_content">
+                                    android:layout_height="wrap_content"
+                                    android:layout_toEndOf="@id/rating_text_view">
 
-                                    <androidx.constraintlayout.widget.ConstraintLayout
-                                        android:layout_width="50dp"
-                                        android:id="@+id/root_layout_text4"
-                                        android:background="@drawable/progress_bar_animation"
-                                        android:layout_height="16dp">
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        app:cardCornerRadius="20dp"
+                                        android:layout_height="wrap_content">
 
-                                    </androidx.constraintlayout.widget.ConstraintLayout>
+                                        <androidx.constraintlayout.widget.ConstraintLayout
+                                            android:layout_width="50dp"
+                                            android:id="@+id/root_layout_text4"
+                                            android:background="@drawable/progress_bar_animation"
+                                            android:layout_height="16dp">
 
-                                </androidx.cardview.widget.CardView>
+                                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                                    </androidx.cardview.widget.CardView>
+
+                                </com.facebook.shimmer.ShimmerFrameLayout>
 
                             </RelativeLayout>
 
+                            <!-- Espacio en blanco para separar elementos -->
+                            <View
+                                android:layout_width="16dp"
+                                android:layout_height="match_parent"/>
+
+                            <com.airbnb.lottie.LottieAnimationView
+                                android:id="@+id/lottie_animation_add"
+                                android:layout_width="50dp"
+                                android:layout_height="50dp"
+                                android:src="@drawable/baseline_bookmark_border_24"
+                                android:gravity="end"
+                                android:layout_weight="1"
+                                android:layout_marginLeft="200dp"
+                                />
+
+                            <!-- Animación Lottie -->
+                            <com.airbnb.lottie.LottieAnimationView
+                                android:id="@+id/lottie_animation_view"
+                                android:layout_width="50dp"
+                                android:layout_height="50dp"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/twitter_like"
+                                android:gravity="end"
+                                android:layout_weight="1"
+                                android:layout_marginRight="10dp"
+                                />
+
                         </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/status_text_view"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:textColor="#FFF"
-                            android:text="Estado de la película" />
 
                         <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/genresRecyclerView"
+                            android:layout_marginTop="20dp"
+                            android:id="@+id/genres_text_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+
+                        <TextView
+                            android:id="@+id/txtTyperecomeded"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginTop="10dp"
+                            android:text=""
+                            android:textColor="#C4C6D0"
+                            android:textStyle="bold" />
+
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:layout_marginTop="10dp"
+                            android:id="@+id/reomendedRecycler"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />
 
@@ -150,33 +204,41 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-
                         <TextView
                             android:id="@+id/txtTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Titulo"
-                            android:textColor="#000"
+                            android:text=""
+                            android:textColor="#E4E2E6"
                             android:textSize="14dp"
                             android:justificationMode="inter_word"
                             android:maxLines="2"
                             android:ellipsize="end"
                             android:textStyle="bold" />
 
-                        <androidx.cardview.widget.CardView
+
+
+                        <com.facebook.shimmer.ShimmerFrameLayout
+                            android:id="@+id/shimmer_title"
                             android:layout_width="match_parent"
-                            app:cardCornerRadius="20dp"
                             android:layout_height="wrap_content">
 
-                            <androidx.constraintlayout.widget.ConstraintLayout
+                            <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
-                                android:id="@+id/root_layout_text1"
-                                android:background="@drawable/progress_bar_animation"
-                                android:layout_height="16dp">
+                                app:cardCornerRadius="20dp"
+                                android:layout_height="wrap_content">
 
-                            </androidx.constraintlayout.widget.ConstraintLayout>
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:layout_width="match_parent"
+                                    android:id="@+id/root_layout_text1"
+                                    android:background="@drawable/progress_bar_animation"
+                                    android:layout_height="16dp">
 
-                        </androidx.cardview.widget.CardView>
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            </androidx.cardview.widget.CardView>
+
+                        </com.facebook.shimmer.ShimmerFrameLayout>
 
                     </RelativeLayout>
 
@@ -189,27 +251,34 @@
                             android:layout_marginTop="10dp"
                             android:layout_width="230dp"
                             android:layout_height="wrap_content"
-                            android:text="Generos"
-                            android:textColor="#000"
+                            android:text=""
+                            android:textColor="#E4E2E6"
                             android:textSize="10dp"
                             android:inputType="textMultiLine"
                             android:textStyle="normal" />
 
-                        <androidx.cardview.widget.CardView
+                        <com.facebook.shimmer.ShimmerFrameLayout
+                            android:id="@+id/shimmer_tags"
                             android:layout_width="match_parent"
-                            app:cardCornerRadius="20dp"
-                            android:layout_marginTop="10dp"
                             android:layout_height="wrap_content">
 
-                            <androidx.constraintlayout.widget.ConstraintLayout
+                            <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
-                                android:id="@+id/root_layout_text2"
-                                android:background="@drawable/progress_bar_animation"
-                                android:layout_height="16dp">
+                                app:cardCornerRadius="20dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_height="wrap_content">
 
-                            </androidx.constraintlayout.widget.ConstraintLayout>
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:layout_width="match_parent"
+                                    android:id="@+id/root_layout_text2"
+                                    android:background="@drawable/progress_bar_animation"
+                                    android:layout_height="16dp">
 
-                        </androidx.cardview.widget.CardView>
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            </androidx.cardview.widget.CardView>
+
+                        </com.facebook.shimmer.ShimmerFrameLayout>
 
                     </RelativeLayout>
 
@@ -231,19 +300,34 @@
                 android:layout_height="match_parent">
 
                 <ImageView
+                    android:background="#1E1E1E"
                     android:id="@+id/imgFont"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop" />
 
-
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_layout"
                     android:layout_width="match_parent"
-                    android:id="@+id/root_layout"
-                    android:background="@drawable/progress_bar_animation"
                     android:layout_height="match_parent">
 
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        app:cardCornerRadius="15dp"
+                        android:layout_height="match_parent">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:layout_width="match_parent"
+                            android:id="@+id/root_layout"
+                            android:background="@drawable/bg_gradient"
+                            android:layout_height="match_parent">
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    </androidx.cardview.widget.CardView>
+
+                </com.facebook.shimmer.ShimmerFrameLayout>
+
 
             </RelativeLayout>
 

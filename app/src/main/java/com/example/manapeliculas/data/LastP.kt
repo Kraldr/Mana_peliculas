@@ -5,4 +5,7 @@ data class LastP(
     val src: String,
     val titulo: String,
     val year: String
-)
+){
+    // Constructor sin argumentos necesario para Firebase
+    constructor() : this("", "", "", "")
+}

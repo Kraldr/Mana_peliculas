@@ -1,9 +1,14 @@
 package com.example.manapeliculas
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.app.AlertDialog
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Outline
+import android.graphics.Rect
 import android.graphics.drawable.AnimationDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,27 +16,36 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewOutlineProvider
-import androidx.core.view.isVisible
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.example.manapeliculas.adapters.ListEpisodesAdapter
+import com.example.manapeliculas.adapters.RecomendedAdapter
 import com.example.manapeliculas.data.MutableX
+import com.example.manapeliculas.data.User
+import com.example.manapeliculas.data.UserData
+import com.example.manapeliculas.data.cuevana2.LastP
+import com.example.manapeliculas.data.cuevana2.PDestacada
 import com.example.manapeliculas.data.dataMovie
-import com.example.manapeliculas.data.servers.servers
 import com.example.manapeliculas.databinding.ActivityMovieBinding
-import com.google.gson.Gson
+import com.example.manapeliculas.ui.gallery.GalleryFragment
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import jp.wasabeef.glide.transformations.BlurTransformation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import okio.IOException
+import org.jsoup.Jsoup
+import kotlin.random.Random
 
 class Movie : AppCompatActivity() {
 
@@ -46,13 +60,25 @@ class Movie : AppCompatActivity() {
     private val job = Job()
     private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
     private val client = OkHttpClient()
-    private lateinit var dialog:AlertDialog
+    private lateinit var dialog: AlertDialog
+    private var numPage = ""
+    private var like = false
+    private var boockmark = false
+    private var mDatabase: DatabaseReference? = null
+    private var objectsArray = mutableListOf<LastP>()
+    private var myListArray = mutableListOf<LastP>()
+    private var objetoLastP: LastP? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        mDatabase = FirebaseDatabase.getInstance().reference;
+
+        val userData = getUserDataFromSharedPreferences()
+        val source = intent.getStringExtra("href")
 
         val fadeIn = ObjectAnimator.ofFloat(binding.imageView, "alpha", 0f, 1f)
         fadeIn.duration = 1000
@@ -66,31 +92,6 @@ class Movie : AppCompatActivity() {
         animatorSet.playTogether(fadeIn, scaleUpX, scaleUpY)
         animatorSet.start()
 
-        animDrawable = binding.rootLayout.background as AnimationDrawable
-        animDrawable.setEnterFadeDuration(10)
-        animDrawable.setExitFadeDuration(5000)
-        animDrawable.start()
-
-        animDrawable2 = binding.rootLayoutText1.background as AnimationDrawable
-        animDrawable2.setEnterFadeDuration(10)
-        animDrawable2.setExitFadeDuration(5000)
-        animDrawable2.start()
-
-        animDrawable3 = binding.rootLayoutText2.background as AnimationDrawable
-        animDrawable3.setEnterFadeDuration(10)
-        animDrawable3.setExitFadeDuration(5000)
-        animDrawable3.start()
-
-        animDrawable4 = binding.rootLayoutText3.background as AnimationDrawable
-        animDrawable4.setEnterFadeDuration(10)
-        animDrawable4.setExitFadeDuration(5000)
-        animDrawable4.start()
-
-        animDrawable5 = binding.rootLayoutText4.background as AnimationDrawable
-        animDrawable5.setEnterFadeDuration(10)
-        animDrawable5.setExitFadeDuration(5000)
-        animDrawable5.start()
-
         val cardView = binding.cardview
 
         val outlineProvider = object : ViewOutlineProvider() {
@@ -103,77 +104,232 @@ class Movie : AppCompatActivity() {
         cardView.clipToOutline = true
         cardView.elevation = 30f
 
-        val source = intent.getStringExtra("href")
+        val decoration = GalleryFragment.SpacesItemDecoration(16)
+        if (!isDecorationAlreadyApplied(binding.reomendedRecycler, decoration)) {
+            binding.reomendedRecycler.addItemDecoration(decoration)
+        }
+
+        loadData(userData.userId, source)
 
         if (source != null) {
             if (source.contains("movies")) {
                 scrapeCuevana2(source)
-            }else {
-                scrapeCuevanaSeries2 (source)
+                screapePage()
+            } else {
+                scrapeCuevanaSeries2(source)
+            }
+        }
+
+        binding.lottieAnimationAdd.setOnClickListener {
+            if (!boockmark) {
+                objetoLastP?.let { myListArray.add(it) }
+                boockmark = likeAnimation(
+                    binding.lottieAnimationAdd,
+                    R.raw.animation_lm2nk2kg,
+                    boockmark,
+                    R.drawable.baseline_bookmark_border_24
+                )
+                saveData(userData.userId, "myList", myListArray)
+            } else {
+                boockmark = likeAnimation(
+                    binding.lottieAnimationAdd,
+                    R.raw.animation_lm2nk2kg,
+                    boockmark,
+                    R.drawable.baseline_bookmark_border_24
+                )
+                val iterator = myListArray.iterator()
+                while (iterator.hasNext()) {
+                    val data = iterator.next()
+                    if (data.href == objetoLastP?.href ?: "") {
+                        iterator.remove()
+                    }
+                }
+
+                deleteData(userData.userId, "myList", myListArray)
+            }
+        }
+
+        binding.lottieAnimationView.setOnClickListener {
+            if (!like) {
+                objetoLastP?.let { objectsArray.add(it) }
+                like = likeAnimation(binding.lottieAnimationView, R.raw.animation_lm2o3qv0, like, R.drawable.twitter_like)
+                saveData(userData.userId, "like", objectsArray)
+            } else {
+                val iterator = objectsArray.iterator()
+                while (iterator.hasNext()) {
+                    val data = iterator.next()
+                    if (data.href == objetoLastP?.href ?: "") {
+                        iterator.remove()
+                    }
+                }
+                like = likeAnimation(binding.lottieAnimationView, R.raw.animation_lm2o3qv0, like, R.drawable.twitter_like)
+                deleteData(userData.userId, "like", objectsArray)
             }
         }
     }
 
-    private fun scrapeCuevana2 (url: String) {
-        val url = "http://10.0.2.2:3000/searchcue/${url}"
-        val request = Request.Builder().url(url).get().build()
+    private fun loadData(userId: String, source: String?) {
+        mDatabase?.child("users")?.child(userId)?.addListenerForSingleValueEvent(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(User::class.java)
+                if (user != null) {
+                    val likeList = user.like
+                    myListArray = user.myList
+                    objectsArray = likeList
+                    val contieneHrefBuscado = likeList.any { obj ->
+                        obj.href == source
+                    }
 
-        val client = OkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println(e)
-            }
+                    val contieneHrefBuscadomylist = myListArray.any { obj ->
+                        obj.href == source
+                    }
 
-            override fun onResponse(call: Call, response: Response) {
-                val responseData = response.body?.string()
-                val gson = Gson()
-                val data = gson.fromJson(responseData, dataMovie::class.java)
+                    if (contieneHrefBuscadomylist) {
+                        boockmark = likeAnimation(
+                            binding.lottieAnimationAdd,
+                            R.raw.animation_lm2nk2kg,
+                            boockmark,
+                            R.drawable.baseline_bookmark_border_24
+                        )
+                    }
 
-                val refresh = Handler(Looper.getMainLooper())
-                refresh.post {
-                    binding.txtTitle.text = data.titulo
-                    binding.descriptionTextView.text = data.sinopsis
-                    binding.txtGen.text = data.tags
-                    binding.ratingTextView.text = data.rate
-
-                    binding.rootLayoutText1.isVisible = false
-                    binding.rootLayoutText2.isVisible = false
-                    binding.rootLayoutText3.isVisible = false
-                    binding.rootLayoutText4.isVisible = false
-                    binding.rootLayoutText1.isEnabled = false
-                    binding.rootLayoutText2.isEnabled = false
-                    binding.rootLayoutText3.isEnabled = false
-                    binding.rootLayoutText4.isEnabled = false
-                    animDrawable.stop()
-                    animDrawable2.stop()
-                    animDrawable3.stop()
-                    animDrawable4.stop()
-                    animDrawable5.stop()
-
-                    Glide.with(applicationContext)
-                        .load(data.hrefIMG)
-                        .into(binding.imgFont)
-
-                    Glide.with(applicationContext)
-                        .load(data.hrefIMG)
-                        .transform(BlurTransformation(25, 3))
-                        .into(binding.imageView)
-
-                    binding.rootLayout.isVisible = false
-                    binding.rootLayout.isEnabled = false
-                    animDrawable.stop()
+                    if (contieneHrefBuscado) {
+                        like = likeAnimation(
+                            binding.lottieAnimationView,
+                            R.raw.animation_lm2o3qv0,
+                            like,
+                            R.drawable.twitter_like
+                        )
+                    }
 
                 }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Manejar la cancelación si es necesario
             }
         })
     }
 
-    private fun scrapeCuevanaSeries2 (url: String) {
+    private fun saveData(userId: String, path: String, objectsArray: MutableList<LastP>) {
+        mDatabase?.child("users")?.child(userId)?.child(path)?.setValue(objectsArray)
+    }
 
-        val parts = url.split("/")
-        val lastPart = parts.lastOrNull()
+    private fun deleteData(userId: String, path: String, objectsArray: MutableList<LastP>) {
+        mDatabase?.child("users")?.child(userId)?.child(path)?.setValue(objectsArray)
+    }
 
-        /*coroutineScope.launch(Dispatchers.IO) {
+    private fun likeAnimation(
+        imageView: LottieAnimationView,
+        animation: Int,
+        like: Boolean,
+        image: Int
+    ): Boolean {
+
+        if (!like) {
+            imageView.setAnimation(animation)
+            imageView.playAnimation()
+
+        } else {
+            imageView.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .setListener(object : AnimatorListenerAdapter() {
+
+                    override fun onAnimationEnd(animator: Animator) {
+                        imageView.setImageResource(image)
+                        imageView.alpha = 1f
+                    }
+
+                })
+
+        }
+
+        return !like
+    }
+
+    private fun screapePage() {
+        coroutineScope.launch(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url("https://www.cuevana2espanol.icu/archives/movies/top/week/page/100")
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+
+            val doc = Jsoup.parse(body)
+
+            val numPageTemp =
+                doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.pt-3.container > div > ul > li:nth-child(7) > a")
+                    ?.text()
+                    ?.toInt()
+
+            withContext(Dispatchers.Main) {
+                if (numPageTemp != null) {
+                    scrapeRecomed(numPageTemp, "Películas recomendadas")
+                }
+            }
+        }
+    }
+
+    private fun scrapeRecomed(page: Int, type: String) {
+        val randomNumber = Random.nextInt(page) + 1
+        coroutineScope.launch(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url("https://www.cuevana2espanol.icu/archives/movies/top/week/page/$randomNumber")
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+
+            val doc = Jsoup.parse(body)
+
+            val pDestacadas =
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(1) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
+
+            val dataEpisode = mutableListOf<PDestacada>()
+            for (pDestacada in pDestacadas) {
+                dataEpisode.add(
+                    PDestacada(
+                        "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a")
+                            ?.attr("href").toString(),
+                        "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a > img")
+                            ?.attr("src").toString(),
+                        pDestacada.selectFirst("article > div > a > h3")?.text().toString(),
+                        pDestacada.selectFirst("article > div > span")?.text().toString()
+                    )
+                )
+            }
+
+            val dataEpisodeRandom = mutableListOf<PDestacada>()
+            val randomNumbersSet = mutableSetOf<Int>()
+
+            while (randomNumbersSet.size < 12) {
+                val randomNumber = Random.nextInt(dataEpisode.size)
+                randomNumbersSet.add(randomNumber)
+            }
+
+            for (index in randomNumbersSet) {
+                dataEpisodeRandom.add(dataEpisode[index])
+            }
+
+
+            withContext(Dispatchers.Main) {
+
+                binding.txtTyperecomeded.text = type
+
+                binding.reomendedRecycler.apply {
+                    layoutManager = GridLayoutManager(applicationContext, 3)
+                    adapter = RecomendedAdapter(dataEpisodeRandom, applicationContext)
+                }
+            }
+        }
+    }
+
+    private fun scrapeCuevana2(url: String) {
+
+        coroutineScope.launch(Dispatchers.IO) {
             val request = Request.Builder()
                 .url(url)
                 .build()
@@ -183,30 +339,95 @@ class Movie : AppCompatActivity() {
 
             val doc = Jsoup.parse(body)
 
-            val dataMovies = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.mb-3.pt-3.container > div.mt-2.row > table > tbody > tr")
+            val dataMovies =
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.mb-3.pt-3.container > div.mt-2.row > table > tbody > tr")
 
             val data = mutableListOf<dataMovie>()
 
             val episodes = mutableListOf<MutableX>()
 
             val duracion = dataMovies[3].selectFirst("td:nth-child(2)")?.text().toString()
-            val hrefIMG = "https://www.cuevana2espanol.icu" + doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(1) > div.serieInfo_image__5Tx0e.col > div > img")?.attr("src")
+            val hrefIMG =
+                "https://www.cuevana2espanol.icu" + doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.mb-3.pt-3.container > div:nth-child(1) > div.movieInfo_image__LJrqk.col > div > img")
+                    ?.attr("src")
             val originalTitle = dataMovies[1].selectFirst("td:nth-child(2)")?.text().toString()
             val rate = dataMovies[2].selectFirst("td:nth-child(2)")?.text().toString()
-            val sinopsis = doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(1) > div.serieInfo_data__SuMej.pt-3.col > div:nth-child(2)")?.text().toString()
+            val sinopsis =
+                doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.mb-3.pt-3.container > div:nth-child(1) > div.movieInfo_data__HL5zl.pt-3.col > div:nth-child(2)")
+                    ?.text().toString()
             val tags = dataMovies[6].selectFirst("td:nth-child(2)")?.text().toString()
             val titulo = dataMovies[0].selectFirst("td:nth-child(2)")?.text().toString()
             val year = dataMovies[4].selectFirst("td:nth-child(2)")?.text().toString()
 
-            val dataEpisodes = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(2) > div.row.row-cols-xl-4.row-cols-lg-3.row-cols-2 > div")
+
+            withContext(Dispatchers.Main) {
+                binding.txtTitle.text = titulo
+                binding.descriptionTextView.text = sinopsis
+                binding.txtGen.text = tags
+                binding.ratingTextView.text = rate
+
+                Glide.with(applicationContext)
+                    .load(hrefIMG)
+                    .into(binding.imgFont)
+
+                Glide.with(applicationContext)
+                    .load(hrefIMG)
+                    .transform(BlurTransformation(25, 3))
+                    .into(binding.imageView)
+
+                stopAnimation()
+                objetoLastP = LastP(url, hrefIMG, titulo, year)
+            }
+
+        }
+    }
+
+    private fun scrapeCuevanaSeries2(url: String) {
+
+        coroutineScope.launch(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url(url)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val body = response.body?.string()
+
+            val doc = Jsoup.parse(body)
+
+            val dataMovies =
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div.mb-3.pt-3.container > div.mt-2.row > table > tbody > tr")
+
+            val data = mutableListOf<dataMovie>()
+
+            val episodes = mutableListOf<MutableX>()
+
+            val duracion = dataMovies[3].selectFirst("td:nth-child(2)")?.text().toString()
+            val hrefIMG =
+                "https://www.cuevana2espanol.icu" + doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(1) > div.serieInfo_image__5Tx0e.col > div > img")
+                    ?.attr("src")
+            val originalTitle = dataMovies[1].selectFirst("td:nth-child(2)")?.text().toString()
+            val rate = dataMovies[2].selectFirst("td:nth-child(2)")?.text().toString()
+            val sinopsis =
+                doc.selectFirst("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(1) > div.serieInfo_data__SuMej.pt-3.col > div:nth-child(2)")
+                    ?.text().toString()
+            val tags = dataMovies[6].selectFirst("td:nth-child(2)")?.text().toString()
+            val titulo = dataMovies[0].selectFirst("td:nth-child(2)")?.text().toString()
+            val year = dataMovies[4].selectFirst("td:nth-child(2)")?.text().toString()
+
+            val dataEpisodes =
+                doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div > div:nth-child(2) > div.row.row-cols-xl-4.row-cols-lg-3.row-cols-2 > div")
 
             for (dataEpisode in dataEpisodes) {
                 episodes.add(
                     MutableX(
-                        dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > span")?.text().toString(),
-                        dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > a > h2")?.text().toString(),
-                        "https://www.cuevana2espanol.icu" + dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > a")?.attr("href").toString(),
-                        "https://www.cuevana2espanol.icu" + dataEpisode.selectFirst("article > div.EpisodeItem_poster__AwaLr > a > img")?.attr("src").toString()
+                        dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > span")
+                            ?.text().toString(),
+                        dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > a > h3")
+                            ?.text().toString(),
+                        "https://www.cuevana2espanol.icu" + dataEpisode.selectFirst("article > div.EpisodeItem_data__jsvqZ > a")
+                            ?.attr("href").toString(),
+                        "https://www.cuevana2espanol.icu" + dataEpisode.selectFirst("article > div.EpisodeItem_poster__AwaLr > a > img")
+                            ?.attr("src").toString()
 
                     )
                 )
@@ -220,20 +441,6 @@ class Movie : AppCompatActivity() {
                 binding.txtGen.text = tags
                 binding.ratingTextView.text = rate
 
-                binding.rootLayoutText1.isVisible = false
-                binding.rootLayoutText2.isVisible = false
-                binding.rootLayoutText3.isVisible = false
-                binding.rootLayoutText4.isVisible = false
-                binding.rootLayoutText1.isEnabled = false
-                binding.rootLayoutText2.isEnabled = false
-                binding.rootLayoutText3.isEnabled = false
-                binding.rootLayoutText4.isEnabled = false
-                animDrawable.stop()
-                animDrawable2.stop()
-                animDrawable3.stop()
-                animDrawable4.stop()
-                animDrawable5.stop()
-
                 Glide.with(applicationContext)
                     .load(hrefIMG)
                     .into(binding.imgFont)
@@ -243,77 +450,58 @@ class Movie : AppCompatActivity() {
                     .transform(BlurTransformation(25, 3))
                     .into(binding.imageView)
 
-                binding.rootLayout.isVisible = false
-                binding.rootLayout.isEnabled = false
-                animDrawable.stop()
 
                 initRecyclerViewRecent(episodes)
+                stopAnimation()
+
+                objetoLastP = LastP(url, hrefIMG, titulo, year)
             }
 
-        }*/
+        }
+    }
 
-        val urls = "http://10.0.2.2:3000/scrapeDataSerie/${lastPart}"
+    private fun stopAnimation() {
+        binding.shimmerLayout.visibility = View.GONE
+        binding.shimmerLayout.stopShimmer()
+        binding.shimmerTitle.visibility = View.GONE
+        binding.shimmerTitle.stopShimmer()
+        binding.shimmerTags.visibility = View.GONE
+        binding.shimmerTags.stopShimmer()
+        binding.shimmerRate.visibility = View.GONE
+        binding.shimmerRate.stopShimmer()
+        binding.shimmerSinop.visibility = View.GONE
+        binding.shimmerSinop.stopShimmer()
+    }
 
-
-        val request = Request.Builder().url(urls).get().build()
-
-        val client = OkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println(e)
+    class SpacesItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
+            outRect.apply {
+                left = space
+                right = space
+                bottom = space
+                if (parent.getChildLayoutPosition(view) < 3) top = space
             }
+        }
+    }
 
-            override fun onResponse(call: Call, response: Response) {
-                val responseData = response.body?.string()
-                val gson = Gson()
-                println(responseData)
-                val data = gson.fromJson(responseData, dataMovie::class.java)
-
-                val refresh = Handler(Looper.getMainLooper())
-                refresh.post {
-                    binding.txtTitle.text = data.titulo
-                    binding.descriptionTextView.text = data.sinopsis
-                    binding.txtGen.text = data.tags
-                    binding.ratingTextView.text = data.rate
-
-                    binding.rootLayoutText1.isVisible = false
-                    binding.rootLayoutText2.isVisible = false
-                    binding.rootLayoutText3.isVisible = false
-                    binding.rootLayoutText4.isVisible = false
-                    binding.rootLayoutText1.isEnabled = false
-                    binding.rootLayoutText2.isEnabled = false
-                    binding.rootLayoutText3.isEnabled = false
-                    binding.rootLayoutText4.isEnabled = false
-                    animDrawable.stop()
-                    animDrawable2.stop()
-                    animDrawable3.stop()
-                    animDrawable4.stop()
-                    animDrawable5.stop()
-
-                    Glide.with(applicationContext)
-                        .load(data.hrefIMG)
-                        .into(binding.imgFont)
-
-                    Glide.with(applicationContext)
-                        .load(data.hrefIMG)
-                        .transform(BlurTransformation(25, 3))
-                        .into(binding.imageView)
-
-                    binding.rootLayout.isVisible = false
-                    binding.rootLayout.isEnabled = false
-                    animDrawable.stop()
-
-                    //initRecyclerViewRecent(data.mutable)
-                    dataEpisodes(data.mutable)
-                }
-            }
-        })
+    private fun isDecorationAlreadyApplied(
+        recyclerView: RecyclerView,
+        decoration: RecyclerView.ItemDecoration
+    ): Boolean {
+        return (0 until recyclerView.itemDecorationCount)
+            .map { recyclerView.getItemDecorationAt(it) }
+            .any { it === decoration }
     }
 
     private fun initRecyclerViewRecent(mutable: List<MutableX>) {
         val refresh = Handler(Looper.getMainLooper())
         refresh.post(kotlinx.coroutines.Runnable {
-            binding.genresRecyclerView.apply {
+            binding.genresTextView.apply {
                 layoutManager = LinearLayoutManager(applicationContext)
                 val adapter = ListEpisodesAdapter(mutable, applicationContext)
                 this.adapter = adapter
@@ -322,51 +510,14 @@ class Movie : AppCompatActivity() {
 
     }
 
-    private fun dataEpisodes(mutable: List<MutableX>) {
+    private fun getUserDataFromSharedPreferences(): UserData {
+        val sharedPreferences: SharedPreferences =
+            getSharedPreferences("UserData", Context.MODE_PRIVATE)
 
-        val adapter = ListEpisodesAdapter(
-            mutable,
-            applicationContext
-        )
+        val userId = sharedPreferences.getString("userID", "") ?: ""
+        val tags = sharedPreferences.getString("tags", "") ?: ""
+        val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
 
-        adapter.setOnItemClickListener(object :
-            ListEpisodesAdapter.OnItemClickListener {
-            override fun onItemClicked(url: String) {
-                coroutineScope.launch {
-                    val text = withContext(Dispatchers.IO) {
-                        try {
-                            val parts = url.split('/')
-                            val extractedPart = parts.drop(3).joinToString("/")
-
-                            val urls = "http://10.0.2.2:3000/frameFenix/${extractedPart}"
-
-
-                            val request = Request.Builder().url(urls).get().build()
-
-                            val client = OkHttpClient()
-                            client.newCall(request).enqueue(object : Callback {
-                                override fun onFailure(call: Call, e: IOException) {
-                                    println(e)
-                                }
-
-                                override fun onResponse(call: Call, response: Response) {
-                                    val responseData = response.body?.string()
-                                    val gson = Gson()
-                                    val data = gson.fromJson(responseData, servers::class.java)
-
-                                }
-                            })
-                        } catch (e: Exception) {
-                            println(e)
-                        }
-                    }
-                }
-            }
-        })
-
-        binding.genresRecyclerView.apply {
-            layoutManager = LinearLayoutManager(applicationContext)
-            this.adapter = adapter
-        }
+        return UserData(userId, tags, isLoggedIn)
     }
 }

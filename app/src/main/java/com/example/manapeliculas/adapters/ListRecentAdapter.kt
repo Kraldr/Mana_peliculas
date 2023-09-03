@@ -6,11 +6,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.detodito.ViewHolders.SRecentViewHolder
 import com.example.manapeliculas.R
-import com.example.manapeliculas.data.searchData
 import com.example.manapeliculas.data.searchDataItem
 
 class ListRecentAdapter(
-    private val data: searchData,
+    private val data: MutableList<searchDataItem>,
     private val applicationContext: Context
 ) : RecyclerView.Adapter<SRecentViewHolder> () {
 
