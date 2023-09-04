@@ -47,6 +47,8 @@ Estas tecnologías y patrones nos permiten crear una aplicación de películas r
 
 ![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/0649527e-2dad-4b97-9509-fb84890d80f1)
 
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/e0663275-7ede-40e6-bf22-b3a5c79a02f4)
+
 ![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/61b030a3-e8e9-49f8-9614-cb714e43220e)
 
 ![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/814bed64-1a79-4bc3-a196-6d01f9364537)
