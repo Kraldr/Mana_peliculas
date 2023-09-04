@@ -39,6 +39,20 @@ Estas tecnologías y patrones nos permiten crear una aplicación de películas r
 
 # Capturas de Pantalla
 
-Captura de pantalla 1
-Captura de pantalla 2
-Captura de pantalla 3
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/01269023-7952-4795-b566-920a8d6455b3)
+
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/01e58da3-655b-41c9-82c8-73ed4936a2e3)
+
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/0144d400-eeb6-46de-b585-213f3d6be800)
+
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/0649527e-2dad-4b97-9509-fb84890d80f1)
+
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/61b030a3-e8e9-49f8-9614-cb714e43220e)
+
+![image](https://github.com/Kraldr/Mana_peliculas/assets/44440933/814bed64-1a79-4bc3-a196-6d01f9364537)
+
+
+
+
+
+
