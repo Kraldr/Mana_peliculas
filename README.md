@@ -1,4 +1,4 @@
-# Mana Peliculas
+# Mana Películas
 
 # Descripción
 
