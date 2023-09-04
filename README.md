@@ -35,7 +35,7 @@ Utiliza el patrón de diseño MVVM para separar claramente la lógica de present
 - Lottie: Integración de Lottie para crear animaciones atractivas que mejoren la experiencia del usuario.
 - Coroutines: Hemos implementado el uso de coroutines para realizar operaciones asíncronas de manera eficiente en la aplicación. Esto nos permite mantener la interfaz de usuario receptiva mientras realizamos solicitudes de red y otras tareas que pueden llevar tiempo. Por ejemplo, cuando obtenemos datos de películas recomendadas desde una fuente externa, utilizamos coroutines para realizar esta operación en segundo plano y luego actualizar la interfaz de usuario de manera sincronizada.
 
-Estas tecnologías y patrones nos permiten crear una aplicación de películas robusta, eficiente y atractiva para nuestros usuarios.
+Estas tecnologías y patrones nos permiten crear una aplicación de películas robusta, eficiente y atractiva.
 
 # Capturas de Pantalla
 
