@@ -19,30 +19,39 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".Player"
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
+        <activity
             android:name=".Help"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
         <activity
             android:name=".Settings"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
         <activity
             android:name=".EditProfile"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
         <activity
             android:name=".Profile"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
         <activity
             android:name=".Signup"
             android:exported="false" />
         <activity
             android:name=".Login"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ManaPeliculas.NoActionBar" />
         <activity
             android:name=".Search"
             android:exported="false" />
         <activity
             android:name=".Movie"
             android:exported="false"
-            android:theme="@style/TransparentStatusBar" />
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

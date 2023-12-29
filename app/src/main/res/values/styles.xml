@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorSecondary">#FF4081</color>
+
+    <style name="DialogTheme" parent="Theme.MaterialComponents.Light">
         <item name="android:windowBackground">@null</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="colorSurface">#FFFFFF</item>
     </style>
 
 </resources>

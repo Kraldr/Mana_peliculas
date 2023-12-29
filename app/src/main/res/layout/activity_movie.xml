@@ -91,6 +91,12 @@
                             android:padding="16dp"
                             android:orientation="horizontal">
 
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/baseline_stars_24"
+                                android:layout_weight="0"/>
+
                             <!-- Contenedor del TextView y Shimmer -->
                             <RelativeLayout
                                 android:layout_width="wrap_content"
@@ -160,9 +166,43 @@
 
                         </LinearLayout>
 
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <Button
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_marginRight="30dp"
+                                android:layout_marginLeft="30dp"
+                                android:background="#2ECC71"
+                                android:textColor="#FFF"
+                                android:text="Reproducir"
+                                android:id="@+id/btnStart"
+                                />
+
+                            <LinearLayout
+                                android:id="@+id/spinnerDropdownLayout"
+                                android:visibility="invisible"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+                                <Spinner
+                                    android:id="@+id/spinnerDropdown"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="40dp"
+                                    android:layout_marginRight="10dp"
+                                    android:layout_gravity="end"
+                                    android:background="@android:drawable/btn_dropdown"
+                                    />
+
+                            </LinearLayout>
+
+                        </RelativeLayout>
+
 
                         <androidx.recyclerview.widget.RecyclerView
-                            android:layout_marginTop="20dp"
                             android:id="@+id/genres_text_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />

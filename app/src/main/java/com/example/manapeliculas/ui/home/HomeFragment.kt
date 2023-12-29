@@ -1,13 +1,14 @@
 package com.example.manapeliculas.ui.home
 
-import android.content.Context
-import android.content.Intent
-import android.net.ConnectivityManager
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,16 +25,22 @@ import com.example.manapeliculas.data.cuevana2.LastS
 import com.example.manapeliculas.data.cuevana2.PDestacada
 import com.example.manapeliculas.data.cuevana2.SDestacada
 import com.example.manapeliculas.databinding.FragmentHomeBinding
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okio.IOException
-import org.jsoup.Jsoup
-import org.jsoup.select.Elements
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.*
 
 class HomeFragment : Fragment() {
@@ -45,15 +52,74 @@ class HomeFragment : Fragment() {
     private lateinit var timer: Timer
     private lateinit var scrollTask: TimerTask
     private lateinit var smoothScroller: LinearSmoothScroller
+    private var mDatabase: DatabaseReference? = null
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
+    data class SliderItem(
+        val titles: Title,
+        val images: Image,
+        val TMDbId: String,
+        val slug: Slug
+    )
+
+    data class topDayMovies(
+        val titles: Title,
+        val images: Images,
+        val releaseDate: String,
+        val TMDbId: String,
+        val slug: Slug
+    )
+
+    data class topDaySeries(
+        val titles: Title,
+        val images: Images,
+        val releaseDate: String,
+        val TMDbId: String,
+        val slug: Slug
+    )
+
+    data class lastMovies(
+        val titles: Title,
+        val images: Images,
+        val releaseDate: String,
+        val TMDbId: String,
+        val slug: Slug
+    )
+
+    data class lastSeries(
+        val titles: Title,
+        val images: Images,
+        val releaseDate: String,
+        val TMDbId: String,
+        val slug: Slug
+    )
+
+    data class Title(
+        val name: String
+    )
+
+    data class Image(
+        val backdrop: String
+    )
+
+    data class Images(
+        val poster: String
+    )
+
+    data class Slug(
+        val name: String
+    )
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         try {
             _binding = FragmentHomeBinding.inflate(inflater, container, false)
             homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+
+            mDatabase = FirebaseDatabase.getInstance().reference
 
             val pDestacada = MutableList(4) { PDestacada("", "", "", "") }
             val sDestacada = MutableList(4) { SDestacada("", "", "", "") }
@@ -63,7 +129,7 @@ class HomeFragment : Fragment() {
 
             setupRecyclerView(pDestacada, sDestacada, lastP, lastS, carousel)
 
-            initRecyclerViewData()
+            loadData()
         } catch (e: Exception) {
             e.printStackTrace()
             // Manejar el error de inicialización de vista
@@ -127,37 +193,198 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun initRecyclerViewData() {
-        val url = "https://www.cuevana2espanol.icu/"
+    private fun loadData() {
+        mDatabase?.child("TokenID")?.addListenerForSingleValueEvent(object : ValueEventListener {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Verifica si hay datos antes de mostrar el Toast
+                if (snapshot.exists()) {
+                    val data = snapshot.value
+                    initRecyclerViewData(data.toString())
+                } else {
+                    // Manejar el caso donde no hay datos
+                    Toast.makeText(requireActivity(), "No hay datos disponibles", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Manejar la cancelación si es necesario
+                Log.e("loadData", "Error al cargar datos: ${error.message}")
+            }
+        })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun initRecyclerViewData(data: String) {
+        val url = "https://www.cuevana2espanol.net/_next/data/${data}/es.json"
 
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 val response = getHttpResponse(url)
-                val doc = Jsoup.parse(response)
 
-                val pDestacadas = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(4) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
-                val sDestacadas = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(5) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
-                val lastPMovies = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(6) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
-                val lastSMovies = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(7) > div.row.row-cols-xl-5.row-cols-lg-4.row-cols-3 > div")
-                val popularMovies = doc.select("#__next > div.pt-3.container > div > div.mainWithSidebar_content__FcoHh.col-md-9 > div:nth-child(3) > div > div > div.carousel-inner > div")
+                // Convierte la respuesta JSON a un objeto Kotlin usando Gson
+                val jsonObject = Gson().fromJson(response, JsonObject::class.java)
 
-                val pDestacadaList = parsePDestacadas(pDestacadas)
-                val sDestacadaList = parseSDestacadas(sDestacadas)
-                val lastPList = parseLastP(lastPMovies)
-                val lastSList = parseLastS(lastSMovies)
-                val carouselList = parseCarousel(popularMovies)
+                // Accede a sliderItems -> data
+                val sliderItemsObject  = jsonObject.getAsJsonObject("pageProps").getAsJsonObject("sliderItems")
+                val sliderItemsData = sliderItemsObject?.getAsJsonArray("data")
 
-                // Actualizar la interfaz de usuario en el hilo principal
+                val dataCarousel = mutableListOf<Carousel>()
+
+                if (sliderItemsData != null) {
+                    // Convierte la lista de elementos en objetos Kotlin usando Gson
+                    val sliderItemsList = Gson().fromJson(sliderItemsData, Array<SliderItem>::class.java)
+
+                    // Ahora puedes trabajar con la lista de sliderItems
+                    for (item in sliderItemsList) {
+
+                        dataCarousel.add(
+                            Carousel(
+                                "https://www.cuevana2espanol.net/movies/" + item.slug.name,
+                                item.images.backdrop,
+                                item.titles.name
+                            )
+                        )
+                    }
+                } else {
+                    println("No data found in sliderItems.")
+                }
+
+                val topDayMoviesObject  = jsonObject.getAsJsonObject("pageProps").getAsJsonObject("topDayMovies")
+                val topDayMoviesData = topDayMoviesObject?.getAsJsonArray("data")
+
+                var dataEpisodePDestacada = mutableListOf<PDestacada>()
+
+                if (topDayMoviesData != null) {
+                    val topDayMoviesList = Gson().fromJson(topDayMoviesData, Array<topDayMovies>::class.java)
+
+                    for (item in topDayMoviesList) {
+                        val year = obtainyear(item.releaseDate)
+                        dataEpisodePDestacada.add(
+                            PDestacada(
+                                "https://www.cuevana2espanol.net/movies/" + item.slug.name,
+                                item.images.poster,
+                                item.titles.name,
+                                year
+                            )
+                        )
+                    }
+
+                    dataEpisodePDestacada = dataEpisodePDestacada.reversed().toMutableList()
+                } else {
+                    println("No data found in topDayMovies.")
+                }
+
+                val topDaySeriesObject  = jsonObject.getAsJsonObject("pageProps").getAsJsonObject("topDaySeries")
+                val topDaySeriesData = topDaySeriesObject?.getAsJsonArray("data")
+
+                var dataEpisodeSDestacada = mutableListOf<SDestacada>()
+
+                if (topDaySeriesData != null) {
+                    val topDaySeriesList = Gson().fromJson(topDaySeriesData, Array<topDaySeries>::class.java)
+
+                    for (item in topDaySeriesList) {
+                        val year = obtainyear(item.releaseDate)
+                        dataEpisodeSDestacada.add(
+                            SDestacada(
+                                "https://www.cuevana2espanol.net/series/" + item.slug.name,
+                                item.images.poster,
+                                item.titles.name,
+                                year
+                            )
+                        )
+                    }
+
+                    dataEpisodeSDestacada = dataEpisodeSDestacada.reversed().toMutableList()
+                } else {
+                    println("No data found in topDayMovies.")
+                }
+
+                val lastMoviesObject  = jsonObject.getAsJsonObject("pageProps").getAsJsonObject("lastMovies")
+                val lastMoviesData = lastMoviesObject?.getAsJsonArray("data")
+
+                var dataEpisodelastP= mutableListOf<LastP>()
+
+                if (topDaySeriesData != null) {
+                    val lastMoviesList = Gson().fromJson(lastMoviesData, Array<lastMovies>::class.java)
+
+                    for (item in lastMoviesList) {
+                        val year = obtainyear(item.releaseDate)
+                        dataEpisodelastP.add(
+                            LastP(
+                                "https://www.cuevana2espanol.net/movies/" + item.slug.name,
+                                item.images.poster,
+                                item.titles.name,
+                                year
+                            )
+                        )
+                    }
+
+                    dataEpisodelastP = dataEpisodelastP.reversed().toMutableList()
+                } else {
+                    println("No data found in lastMovies.")
+                }
+
+                val lastSeriesObject  = jsonObject.getAsJsonObject("pageProps").getAsJsonObject("lastSeries")
+                val lastSeriesData = lastSeriesObject?.getAsJsonArray("data")
+
+                var dataEpisodeLastS= mutableListOf<LastS>()
+
+                if (lastSeriesData != null) {
+                    val lastSeriesList = Gson().fromJson(lastSeriesData, Array<lastSeries>::class.java)
+
+                    for (item in lastSeriesList) {
+                        val year = obtainyear(item.releaseDate)
+                        dataEpisodeLastS.add(
+                            LastS(
+                                "https://www.cuevana2espanol.net/series/" + item.slug.name,
+                                item.images.poster,
+                                item.titles.name,
+                                year
+                            )
+                        )
+                    }
+
+                    dataEpisodeLastS = dataEpisodeLastS.reversed().toMutableList()
+                } else {
+                    println("No data found in lastSeries.")
+                }
+
                 withContext(Dispatchers.Main) {
-                    updateRecyclerView(binding.recyViewPDestadas, PDestacadasAdapter(pDestacadaList, requireActivity()))
-                    updateRecyclerView(binding.recyViewSDestadas, SDestacadasAdapter(sDestacadaList, requireActivity()))
-                    updateRecyclerView(binding.recyViewLastP, LastPAdapter(lastPList, requireActivity()))
-                    updateRecyclerView(binding.recyViewLastS, LastSAdapter(lastSList, requireActivity()))
-                    updateRecyclerView(binding.recyView, CarouselAdapter(carouselList, requireActivity()))
+                    updateRecyclerView(binding.recyView, CarouselAdapter(dataCarousel, requireActivity()))
+                    updateRecyclerView(binding.recyViewPDestadas, PDestacadasAdapter(dataEpisodePDestacada, requireActivity()))
+                    updateRecyclerView(binding.recyViewSDestadas, SDestacadasAdapter(dataEpisodeSDestacada, requireActivity()))
+                    updateRecyclerView2(binding.recyViewLastP, LastPAdapter(dataEpisodelastP, requireActivity()))
+                    updateRecyclerView(binding.recyViewLastS, LastSAdapter(dataEpisodeLastS, requireActivity()))
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun obtainyear(fechaString: String?): String {
+        // Verificar si la fecha es nula
+        if (fechaString.isNullOrEmpty()) {
+            return "Fecha desconocida"
+        }
+
+        // Crear un formateador para el formato ISO 8601
+        val formatter = DateTimeFormatter.ISO_DATE_TIME
+
+        try {
+            // Parsear la cadena de fecha
+            val fecha = LocalDateTime.parse(fechaString, formatter)
+
+            // Obtener el año
+            val anio = fecha.year
+
+            return anio.toString()
+        } catch (e: DateTimeParseException) {
+            // Manejar errores de parseo de fecha
+            e.printStackTrace()
+            return "Fecha inválida"
         }
     }
 
@@ -174,86 +401,6 @@ class HomeFragment : Fragment() {
 
         return response.body?.string() ?: ""
     }
-
-    private fun parsePDestacadas(elements: Elements): List<PDestacada> {
-        val dataEpisode = mutableListOf<PDestacada>()
-        for (pDestacada in elements) {
-            dataEpisode.add(
-                PDestacada(
-                    "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + pDestacada.selectFirst("article > div > a > img")?.attr("src").toString(),
-                    pDestacada.selectFirst("article > div > a > h3")?.text().toString(),
-                    pDestacada.selectFirst("article > div > span")?.text().toString()
-                )
-            )
-        }
-        dataEpisode.reverse()
-        return dataEpisode
-    }
-
-    private fun parseSDestacadas(elements: Elements): List<SDestacada> {
-        val dataEpisode = mutableListOf<SDestacada>()
-        for (sDestacada in elements) {
-            dataEpisode.add(
-                SDestacada(
-                    "https://www.cuevana2espanol.icu" + sDestacada.selectFirst("article > div > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + sDestacada.selectFirst("article > div > a > img")?.attr("src").toString(),
-                    sDestacada.selectFirst("article > div > a > h3")?.text().toString(),
-                    sDestacada.selectFirst("article > div > span")?.text().toString()
-                )
-            )
-        }
-        dataEpisode.reverse()
-        return dataEpisode
-    }
-
-    private fun parseLastP(elements: Elements): List<LastP> {
-        val dataEpisode = mutableListOf<LastP>()
-        for (lastMovie in elements) {
-            dataEpisode.add(
-                LastP(
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("article > div > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("article > div > a > img")?.attr("src").toString(),
-                    lastMovie.selectFirst("article > div > a > h3")?.text().toString(),
-                    lastMovie.selectFirst("article > div > span")?.text().toString()
-                )
-            )
-        }
-        dataEpisode.reverse()
-        return dataEpisode
-    }
-
-    private fun parseLastS(elements: Elements): List<LastS> {
-        val dataEpisode = mutableListOf<LastS>()
-        for (lastMovie in elements) {
-            dataEpisode.add(
-                LastS(
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("article > div > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("article > div > a > img")?.attr("src").toString(),
-                    lastMovie.selectFirst("article > div > a > h3")?.text().toString(),
-                    lastMovie.selectFirst("article > div > span")?.text().toString()
-                )
-            )
-        }
-        dataEpisode.reverse()
-        return dataEpisode
-    }
-
-    private fun parseCarousel(elements: Elements): List<Carousel> {
-        val data = mutableListOf<Carousel>()
-        for (lastMovie in elements) {
-            data.add(
-                Carousel(
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("div > div:nth-child(2) > a")?.attr("href").toString(),
-                    "https://www.cuevana2espanol.icu" + lastMovie.selectFirst("img")?.attr("src").toString(),
-                    lastMovie.selectFirst("div > div:nth-child(1) > h3")?.text().toString()
-                )
-            )
-        }
-        data.reverse()
-        return data
-    }
-
     private fun updateRecyclerView(recyclerView: RecyclerView, adapter: RecyclerView.Adapter<*>) {
         recyclerView.apply {
             layoutManager = LinearLayoutManager(
@@ -264,9 +411,19 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun updateRecyclerView2(recyclerView: RecyclerView, adapter: RecyclerView.Adapter<*>) {
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(
+                requireActivity(), LinearLayoutManager.HORIZONTAL, true
+            )
+            this.adapter = adapter
+            scrollToPosition(7)
+        }
+    }
+
     private fun scrollToPosition(position: Int) {
         requireActivity().runOnUiThread {
-            if (isAdded) { // Verificar si el fragmento está adjunto a la actividad
+            if (isAdded) {
                 if (!::smoothScroller.isInitialized) {
                     smoothScroller = object : LinearSmoothScroller(requireContext()) {
                         override fun getHorizontalSnapPreference(): Int {
@@ -283,7 +440,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

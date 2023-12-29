@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -37,14 +38,56 @@ class Signup : AppCompatActivity() {
             registerUser()
         }
 
-        binding.tagsInputLayout.setEndIconOnClickListener {
-            val inputText = binding.tagsEditText.text.toString()
-            if (inputText.isNotEmpty()) {
-                addChipToGroup(inputText, binding.chipGroup)
-                binding.tagsEditText.text = null
-            }
+        val autoCompleteTextView = binding.autoCompleteTextView
+        val chipGroup = binding.chipGroup
+
+        val itemsList = mutableListOf(
+            "Acción",
+            "Animación",
+            "Crimen",
+            "Familiar",
+            "Misterio",
+            "Suspenso",
+            "Aventura",
+            "Ciencia Ficción",
+            "Drama",
+            "Fantasía",
+            "Romance",
+            "Terror")
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, itemsList)
+        autoCompleteTextView.setAdapter(adapter)
+
+        autoCompleteTextView.setOnItemClickListener { parent, _, position, _ ->
+            val selectedItem = parent.getItemAtPosition(position) as String
+
+            // Agregar el elemento seleccionado como un chip
+            addChip(selectedItem, chipGroup)
+
+            // Remover el elemento seleccionado de la lista
+            itemsList.remove(selectedItem)
+            adapter.notifyDataSetChanged()
         }
 
+    }
+
+    private fun addChip(text: String, chipGroup: ChipGroup) {
+        val chip = Chip(chipGroup.context)
+        chip.text = text
+        chip.isCloseIconVisible = true
+
+        // Manejar el evento de cierre del chip
+        chip.setOnCloseIconClickListener {
+            // Eliminar el chip seleccionado
+            chipGroup.removeView(chip)
+
+            // Agregar el elemento nuevamente a la lista
+            (binding.autoCompleteTextView.adapter as? ArrayAdapter<String>)?.add(text)
+            Toast.makeText(this, "Chip eliminado: $text", Toast.LENGTH_SHORT).show()
+        }
+
+        // Agregar el chip al grupo
+        chipGroup.addView(chip)
     }
 
     private fun registerUser() {
@@ -92,19 +135,6 @@ class Signup : AppCompatActivity() {
                     }
                 }
         }
-    }
-
-    private fun addChipToGroup(inputText: String, chipGroup: ChipGroup) {
-        val chip = Chip(this)
-        chip.text = inputText
-        chip.isCloseIconVisible = true
-
-        // Definir qué hacer cuando se hace clic en el icono de cierre de una ficha:
-        chip.setOnCloseIconClickListener {
-            chipGroup.removeView(chip)
-        }
-
-        chipGroup.addView(chip)
     }
 
     private fun showLoadingDialog() {

@@ -23,6 +23,7 @@ import com.example.manapeliculas.data.UserData
 import com.example.manapeliculas.data.cuevana2.LastP
 import com.example.manapeliculas.databinding.ActivityProfileBinding
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -53,6 +54,13 @@ class Profile : AppCompatActivity() {
             window.statusBarColor = ContextCompat.getColor(this, R.color.colorStatus)
         }
 
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            startActivity(Intent(this, Login::class.java))
+            finish()
+            return
+        }
+
         val rootView = findViewById<View>(android.R.id.content)
         Snackbar.make(rootView, "Inicio de sesión exitoso", Snackbar.LENGTH_LONG).show()
 
@@ -64,10 +72,6 @@ class Profile : AppCompatActivity() {
         binding.dropdownMenu.setOnClickListener {
             val bottomSheetDialogFragment = MyBottomSheetDialogFragment()
             bottomSheetDialogFragment.show(supportFragmentManager, bottomSheetDialogFragment.tag)
-            // Abre la galería para seleccionar una imagen
-            //val intent = Intent(Intent.ACTION_GET_CONTENT)
-            //intent.type = "image/*"
-            //startActivityForResult(intent, 1)
         }
 
     }
@@ -77,79 +81,6 @@ class Profile : AppCompatActivity() {
         })
         finish()
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.data != null) {
-            // Obtiene la Uri de la imagen seleccionada
-            val imageUri: Uri = data.data!!
-
-            // Genera un nombre único para la imagen
-            val uniqueFileName = "${System.currentTimeMillis()}_${imageUri.lastPathSegment}"
-
-            // Crea una referencia al archivo en Firebase Storage
-            val storageRef = storage.reference.child("images/$uniqueFileName")
-
-            // Sube la imagen a Firebase Storage
-            storageRef.putFile(imageUri)
-                .addOnSuccessListener { uploadTask ->
-                    // La carga se completó con éxito
-                    // Puedes obtener la URL de descarga si es necesario
-                    uploadTask.storage.downloadUrl.addOnSuccessListener { uri ->
-                        val downloadUrl = uri.toString()
-
-                        // Guarda la URL de la imagen en la base de datos en tiempo real
-                        // Supongamos que tienes una clave única de la persona, como "personKey"
-                        val personKey =
-                            userData?.userId // Reemplaza con la clave real de la persona
-
-                        val database = Firebase.database
-                        val personRef =
-                            personKey?.let { database.reference.child("users")?.child(it) }
-
-                        personRef?.child("userImage")?.setValue(downloadUrl)?.addOnSuccessListener {
-                            // La URL de la imagen se guardó con éxito en la base de datos
-                            // Puedes realizar acciones adicionales aquí si es necesario
-                            Toast.makeText(this, "Imagen cargada y URL guardada con éxito", Toast.LENGTH_SHORT).show()
-
-                            loadData(personKey)
-                            borrarImagenEnFirebaseStorage(deleteImage)
-                            val mainActivity = MainActivity.instance
-                            mainActivity.loadData(personKey)
-                        }?.addOnFailureListener { exception ->
-                            // Maneja errores en la escritura de datos
-                            // Por ejemplo, muestra un mensaje de error
-                            Toast.makeText(this, "Error al guardar la URL de la imagen: ${exception.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    // Maneja errores en la carga
-                    // Por ejemplo, muestra un mensaje de error
-                    Toast.makeText(this, "Error al cargar la imagen: ${exception.message}", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
-    private fun borrarImagenEnFirebaseStorage(downloadUrl: String) {
-        // Crea una referencia al archivo en Firebase Storage utilizando la URL
-        val storageRef = Firebase.storage.getReferenceFromUrl(downloadUrl)
-
-        // Borra el archivo
-        storageRef.delete()
-            .addOnSuccessListener {
-                // El archivo se borró con éxito
-                // Puedes realizar acciones adicionales aquí si es necesario
-                Log.d("BORRAR_IMAGEN", "Imagen borrada con éxito")
-            }
-            .addOnFailureListener { exception ->
-                // Maneja errores en la eliminación del archivo
-                // Por ejemplo, muestra un mensaje de error
-                Log.e("BORRAR_IMAGEN", "Error al borrar la imagen: ${exception.message}")
-            }
-    }
-
 
 
     private fun loadData(userId: String) {

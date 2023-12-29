@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorSecondary">#FF4081</color>
+
     <style name="TransparentStatusBar" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="colorSurface">#FFFFFF</item>
     </style>
+
 </resources>

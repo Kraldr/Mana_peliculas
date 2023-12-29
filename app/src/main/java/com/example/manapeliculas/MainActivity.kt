@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -17,6 +18,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.bumptech.glide.Glide
+import com.example.manapeliculas.data.User
 import com.example.manapeliculas.data.UserData
 import com.example.manapeliculas.databinding.ActivityMainBinding
 import com.google.firebase.database.DataSnapshot
@@ -115,6 +117,21 @@ class MainActivity : AppCompatActivity() {
                 // Manejar la cancelación si es necesario
             }
         })
+    }
+
+    fun loadToken(): String {
+        var token = ""
+        mDatabase?.child("TokenID")?.addListenerForSingleValueEvent(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+               token = snapshot.value.toString()
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Manejar la cancelación si es necesario
+            }
+        })
+        return token
     }
 
     private fun getUserDataFromSharedPreferences(): UserData {

@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:orientation="vertical"
+    android:background="#1B1B1E"
     tools:context=".Signup">
 
     <ScrollView
@@ -25,6 +26,7 @@
                 android:gravity="center"
                 android:text="Registro"
                 android:textSize="20dp"
+                android:textColor="#FFF"
                 android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -33,6 +35,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
+                android:textColorHint="#FFF"
+                app:boxStrokeColor="#FFF"
                 android:hint="Apodo">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -48,6 +52,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:textColorHint="#FFF"
+                app:boxStrokeColor="#FFF"
                 android:hint="Correo">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -58,31 +64,32 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:layout_marginTop="10dp"
-                android:id="@+id/tags_input_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:endIconContentDescription="Deslegar"
-                app:endIconDrawable="@drawable/baseline_bookmark_add_24"
-                app:endIconMode="custom"
-                android:hint="Tags">
+                android:layout_marginTop="10dp"
+                android:hint="Seleccione un género"
+                android:textColorHint="#FFF"
+                app:boxStrokeColor="#FFF"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/tags_edit_text"
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteTextView"
                     android:layout_width="match_parent"
-                    android:textColorHint="#000"
-                    android:textColor="#000"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:dropDownHeight="wrap_content"
+                    android:dropDownVerticalOffset="4dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroup"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <!-- Chips can be declared here, or added dynamically. -->
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:orientation="horizontal">
 
             </com.google.android.material.chip.ChipGroup>
 
@@ -91,12 +98,18 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="#FFF"
+                app:endIconTint="#FFF"
+                android:textColorHint="#FFF"
                 android:layout_marginTop="10dp"
+                app:endIconMode="password_toggle"
                 android:hint="Contraseña">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/password_edit_text"
                     android:layout_width="match_parent"
+                    android:textColor="#FFF"
+                    android:inputType="textPassword"
                     android:layout_height="wrap_content" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -107,11 +120,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxStrokeColor="#FFF"
+                app:endIconTint="#FFF"
+                android:textColorHint="#FFF"
+                app:endIconMode="password_toggle"
                 android:hint="Confirmar contraseña">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordConfirm_edit_text"
                     android:layout_width="match_parent"
+                    android:textColor="#FFF"
+                    android:inputType="textPassword"
                     android:layout_height="wrap_content" />
 
             </com.google.android.material.textfield.TextInputLayout>
